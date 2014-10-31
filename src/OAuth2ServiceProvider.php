@@ -19,8 +19,11 @@
 namespace Perseids\OAuth2;
 
 use Perseids\OAuth2\Entity\ModelManagerFactory;
+use Perseids\OAuth2\Entity\UserRepository;
+
 use SimpleUser\UserManager;
 
+/*
 use AuthBucket\OAuth2\Controller\AuthorizeController;
 use AuthBucket\OAuth2\Controller\ClientController;
 use AuthBucket\OAuth2\Controller\OAuth2Controller;
@@ -35,11 +38,20 @@ use AuthBucket\OAuth2\Security\Firewall\ResourceListener;
 use AuthBucket\OAuth2\Security\Firewall\TokenListener;
 use AuthBucket\OAuth2\TokenType\TokenTypeHandlerFactory;
 use Silex\Application;
+use Symfony\Component\HttpKernel\KernelEvents;
+*/
+
+use Silex\Application;
 use Silex\ControllerProviderInterface;
 use Silex\ServiceProviderInterface;
-use Symfony\Component\HttpKernel\KernelEvents;
 
-use Perseids\OAuth2\Entity\UserRepository;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Cache\FilesystemCache;
+
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
+use Doctrine\ORM\Tools\Setup;
+
 
 /**
  * OAuth2 service provider as plugin for Silex SecurityServiceProvider.
@@ -51,207 +63,35 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
     protected $em;
     protected $userManager;
 
-    public function __construct(Application $app, UserManager $UserManager) {
-        $this->em = new OAuth2EntityManager($app);
-        $this->userManager = $UserManager;
-    }
-
     public function register(Application $app) {
+
+        $app['doctrine.orm.entity_manager'] = $app->share(function ($app) {
+            $conn = $app['dbs']['default'];
+            $em = $app['dbs.event_manager']['default'];
+
+            $isDevMode = false;
+            $config = Setup::createAnnotationMetadataConfiguration(array(__DIR__.'/../Entity'), $isDevMode, null, null, false);
+
+            return EntityManager::create($conn, $config, $em);
+        });
+
+
+        // Return entity classes for model manager.
         $app['authbucket_oauth2.model'] = array(
             'access_token' => 'Perseids\\OAuth2\\Entity\\AccessToken',
+            'authorize' => 'Perseids\\OAuth2\\Entity\\Authorize',
+            'client' => 'Perseids\\ClientsManager\\Entity\\Client',
+            'code' => 'Perseids\\OAuth2\\Entity\\Code',
+            'refresh_token' => 'Perseids\\OAuth2\\Entity\\RefreshToken',
+            'scope' => 'Perseids\\OAuth2\\Entity\\Scope',
+            'user' => 'Perseids\\OAuth2\\Entity\\User',
         );
 
-        $app['authbucket_oauth2.model_manager.factory'] = $this->em->getModelManagerFactory();
-
-        // (Optional) For using grant_type = password, override this parameter
-        // with your own user provider, e.g. using InMemoryUserProvider or a
-        // Doctrine ORM EntityRepository that implements UserProviderInterface.
-        $app['authbucket_oauth2.user_provider'] = $this->userManager;
-
-        // Add default response type handler.
-        $app['authbucket_oauth2.response_handler'] = array(
-            'code' => 'AuthBucket\\OAuth2\\ResponseType\\CodeResponseTypeHandler',
-            'token' => 'AuthBucket\\OAuth2\\ResponseType\\TokenResponseTypeHandler',
-        );
-
-        // Add default grant type handler.
-        $app['authbucket_oauth2.grant_handler'] = array(
-            'authorization_code' => 'AuthBucket\\OAuth2\\GrantType\\AuthorizationCodeGrantTypeHandler',
-            'client_credentials' => 'AuthBucket\\OAuth2\\GrantType\\ClientCredentialsGrantTypeHandler',
-            'password' => 'AuthBucket\\OAuth2\\GrantType\\PasswordGrantTypeHandler',
-            'refresh_token' => 'AuthBucket\\OAuth2\\GrantType\\RefreshTokenGrantTypeHandler',
-        );
-
-        // Add default token type handler.
-        $app['authbucket_oauth2.token_handler'] = array(
-            'bearer' => 'AuthBucket\\OAuth2\\TokenType\\BearerTokenTypeHandler',
-            'mac' => 'AuthBucket\\OAuth2\\TokenType\\MacTokenTypeHandler',
-        );
-
-        // Add default resource type handler.
-        $app['authbucket_oauth2.resource_handler'] = array(
-            'model' => 'AuthBucket\\OAuth2\\ResourceType\\ModelResourceTypeHandler',
-            'debug_endpoint' => 'AuthBucket\\OAuth2\\ResourceType\\DebugEndpointResourceTypeHandler',
-        );
-
-        $app['authbucket_oauth2.exception_listener'] = $app->share(function () {
-            return new ExceptionListener();
-        });
-
-        $app['authbucket_oauth2.response_handler.factory'] = $app->share(function ($app) {
-            return new ResponseTypeHandlerFactory(
-                $app['security'],
-                $app['validator'],
-                $app['authbucket_oauth2.model_manager.factory'],
-                $app['authbucket_oauth2.token_handler.factory'],
-                $app['authbucket_oauth2.response_handler']
-            );
-        });
-
-        $app['authbucket_oauth2.grant_handler.factory'] = $app->share(function ($app) {
-            return new GrantTypeHandlerFactory(
-                $app['security'],
-                $app['security.user_checker'],
-                $app['security.encoder_factory'],
-                $app['validator'],
-                $app['authbucket_oauth2.model_manager.factory'],
-                $app['authbucket_oauth2.token_handler.factory'],
-                $app['authbucket_oauth2.user_provider'],
-                $app['authbucket_oauth2.grant_handler']
-            );
-        });
-
-        $app['authbucket_oauth2.token_handler.factory'] = $app->share(function ($app) {
-            return new TokenTypeHandlerFactory(
-                $app['validator'],
-                $app['authbucket_oauth2.model_manager.factory'],
-                $app['authbucket_oauth2.token_handler']
-            );
-        });
-
-        $app['authbucket_oauth2.resource_handler.factory'] = $app->share(function ($app) {
-            return new ResourceTypeHandlerFactory(
-                $app,
-                $app['authbucket_oauth2.model_manager.factory'],
-                $app['authbucket_oauth2.resource_handler']
-            );
-        });
-
-        $app['authbucket_oauth2.oauth2_controller'] = $app->share(function () use ($app) {
-            return new OAuth2Controller(
-                $app['security'],
-                $app['validator'],
-                $app['authbucket_oauth2.model_manager.factory'],
-                $app['authbucket_oauth2.response_handler.factory'],
-                $app['authbucket_oauth2.grant_handler.factory']
-            );
-        });
-
-        $app['authbucket_oauth2.authorize_controller'] = $app->share(function () use ($app) {
-            return new AuthorizeController(
-                $app['validator'],
-                $app['serializer'],
-                $app['authbucket_oauth2.model_manager.factory']
-            );
-        });
-
-        $app['authbucket_oauth2.client_controller'] = $app->share(function () use ($app) {
-            return new ClientController(
-                $app['validator'],
-                $app['serializer'],
-                $app['authbucket_oauth2.model_manager.factory']
-            );
-        });
-
-        $app['authbucket_oauth2.scope_controller'] = $app->share(function () use ($app) {
-            return new ScopeController(
-                $app['validator'],
-                $app['serializer'],
-                $app['authbucket_oauth2.model_manager.factory']
-            );
-        });
-
-        $app['security.authentication_provider.oauth2_token._proto'] = $app->protect(function ($name, $options) use ($app) {
-            return $app->share(function () use ($app, $name, $options) {
-                return new TokenProvider(
-                    $name,
-                    $app['authbucket_oauth2.model_manager.factory']
-                );
-            });
-        });
-
-        $app['security.authentication_listener.oauth2_token._proto'] = $app->protect(function ($name, $options) use ($app) {
-            return $app->share(function () use ($app, $name, $options) {
-                return new TokenListener(
-                    $name,
-                    $app['security'],
-                    $app['security.authentication_manager'],
-                    $app['validator']
-                );
-            });
-        });
-
-        $app['security.authentication_provider.oauth2_resource._proto'] = $app->protect(function ($name, $options) use ($app) {
-            return $app->share(function () use ($app, $name, $options) {
-                return new ResourceProvider(
-                    $name,
-                    $app['authbucket_oauth2.resource_handler.factory'],
-                    $options['resource_type'],
-                    $options['scope'],
-                    $options['options']
-                );
-            });
-        });
-
-        $app['security.authentication_listener.oauth2_resource._proto'] = $app->protect(function ($name, $options) use ($app) {
-            return $app->share(function () use ($app, $name, $options) {
-                return new ResourceListener(
-                    $name,
-                    $app['security'],
-                    $app['security.authentication_manager'],
-                    $app['validator'],
-                    $app['authbucket_oauth2.token_handler.factory']
-                );
-            });
-        });
-
-        $app['security.authentication_listener.factory.oauth2_token'] = $app->protect(function ($name, $options) use ($app) {
-            if (!isset($app['security.authentication_provider.'.$name.'.oauth2_token'])) {
-                $app['security.authentication_provider.'.$name.'.oauth2_token'] = $app['security.authentication_provider.oauth2_token._proto']($name, $options);
-            }
-
-            if (!isset($app['security.authentication_listener.'.$name.'.oauth2_token'])) {
-                $app['security.authentication_listener.'.$name.'.oauth2_token'] = $app['security.authentication_listener.oauth2_token._proto']($name, $options);
-            }
-
-            return array(
-                'security.authentication_provider.'.$name.'.oauth2_token',
-                'security.authentication_listener.'.$name.'.oauth2_token',
-                null,
-                'pre_auth',
-            );
-        });
-
-        $app['security.authentication_listener.factory.oauth2_resource'] = $app->protect(function ($name, $options) use ($app) {
-            $options = array_merge(array(
-                'resource_type' => 'model',
-                'scope' => array(),
-                'options' => array(),
-            ), (array) $options);
-
-            if (!isset($app['security.authentication_provider.'.$name.'.oauth2_resource'])) {
-                $app['security.authentication_provider.'.$name.'.oauth2_resource'] = $app['security.authentication_provider.oauth2_resource._proto']($name, $options);
-            }
-
-            if (!isset($app['security.authentication_listener.'.$name.'.oauth2_resource'])) {
-                $app['security.authentication_listener.'.$name.'.oauth2_resource'] = $app['security.authentication_listener.oauth2_resource._proto']($name, $options);
-            }
-
-            return array(
-                'security.authentication_provider.'.$name.'.oauth2_resource',
-                'security.authentication_listener.'.$name.'.oauth2_resource',
-                null,
-                'pre_auth',
+        // Add model managers from ORM.
+        $app['authbucket_oauth2.model_manager.factory'] = $app->share(function ($app) {
+            return new ModelManagerFactory(
+                $app['doctrine.orm.entity_manager'],
+                $app['authbucket_oauth2.model']
             );
         });
     }
@@ -274,23 +114,23 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
             ->bind('api_oauth2_cron');
 
         foreach (array('authorize', 'client', 'scope') as $type) {
-            $controllers->post('/'.$type.'.{_format}', 'authbucket_oauth2.'.$type.'_controller:createAction')
+            $controllers->post('/rest/'.$type.'.{_format}', 'authbucket_oauth2.'.$type.'_controller:createAction')
                 ->bind('api_'.$type.'_create')
                 ->assert('_format', 'json|xml');
 
-            $controllers->get('/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:readAction')
+            $controllers->get('/rest/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:readAction')
                 ->bind('api_'.$type.'_read')
                 ->assert('_format', 'json|xml');
 
-            $controllers->put('/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:updateAction')
+            $controllers->put('/rest/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:updateAction')
                 ->bind('api_'.$type.'_update')
                 ->assert('_format', 'json|xml');
 
-            $controllers->delete('/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:deleteAction')
+            $controllers->delete('/rest/'.$type.'/{id}.{_format}', 'authbucket_oauth2.'.$type.'_controller:deleteAction')
                 ->bind('api_'.$type.'_delete')
                 ->assert('_format', 'json|xml');
 
-            $controllers->get('/'.$type.'.{_format}', 'authbucket_oauth2.'.$type.'_controller:listAction')
+            $controllers->get('/rest/'.$type.'.{_format}', 'authbucket_oauth2.'.$type.'_controller:listAction')
                 ->bind('api_'.$type.'_list')
                 ->assert('_format', 'json|xml');
         }
@@ -298,9 +138,8 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
         return $controllers;
     }
 
-    public function boot(Application $app)
-    {
-        $app['dispatcher']->addListener(KernelEvents::EXCEPTION, array($app['authbucket_oauth2.exception_listener'], 'onKernelException'), -8);
+    public function boot(Application $app) {
+        //$app['dispatcher']->addListener(KernelEvents::EXCEPTION, array($app['perseids_oauth2.exception_listener'], 'onKernelException'), -8);
     }
 }
 ?>
