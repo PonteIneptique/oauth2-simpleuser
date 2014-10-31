@@ -1,0 +1,42 @@
+{
+    "authors": [
+        {
+            "email": "leponteineptique@gmail.com",
+            "homepage": "http://algorythme.net",
+            "name": "Thibault Clerice"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Perseids\\OAuth2\\": "src/"
+        }
+    },
+    "description": "An Implementation of ORM for oAuthBucket oAuth2 implementation using clients issued by perseids/clients-manager and user issued by jasongrimes/silex-simpleuser",
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "0.x-dev",
+            "dev-master": "0.1.x-dev"
+        }
+    },
+    "homepage": "https://github.com/ponteineptique/oauth2-clients-manager",
+    "keywords": [
+        "oauth2"
+    ],
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "name": "perseids/oauth2-orm-bridge",
+    "require": {
+        "php": ">=5.3.9",
+        "silex/silex": "~1.2",
+        "doctrine/orm": "~2.2,>=2.2.3",
+        "twig/twig": "~1.8",
+        "authbucket/oauth2-php": "~2.3",
+        "jasongrimes/silex-simpleuser": "~1.7",
+        "perseids/clients-manager": "~0.1"
+    },
+    "require-dev" : {
+        "silex/silex": "~1.2",
+        "jasongrimes/silex-simpleuser": "~1.7"
+    },
+    "type": "library"
+}
