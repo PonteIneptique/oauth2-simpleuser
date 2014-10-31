@@ -45,15 +45,18 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProviderInterface
 {
+
+    public function __construct(Application $app) {
+        $this->em = new OAuth2EntityManager($app);
+    }
+
     public function register(Application $app)
     {
         $app['authbucket_oauth2.model'] = array(
             'access_token' => 'Perseids\\OAuth2\\Entity\\AccessToken',
         );
 
-        $app['authbucket_oauth2.model_manager.factory'] = $app->share(function ($app) {
-            return new ModelManagerFactory($app['authbucket_oauth2.model']);
-        });
+        $app['authbucket_oauth2.model_manager.factory'] = $this->em->getModelManagerFactory();
 
         // (Optional) For using grant_type = password, override this parameter
         // with your own user provider, e.g. using InMemoryUserProvider or a

@@ -17,7 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * AccessToken
  *
- * @ORM\Table(name="authbucket_oauth2_access_token")
+ * @ORM\Table(name="perseids_oauth2_access_token")
  * @ORM\Entity(repositoryClass="Perseids\OAuth2\Entity\AccessTokenRepository")
  */
 class AccessToken implements AccessTokenInterface

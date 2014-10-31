@@ -18,7 +18,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * User
  *
- * @ORM\Table(name="authbucket_oauth2_user")
+ * @ORM\Table(name="users")
  * @ORM\Entity(repositoryClass="Perseids\OAuth2\Entity\UserRepository")
  */
 class User implements ModelInterface, UserInterface
@@ -26,7 +26,7 @@ class User implements ModelInterface, UserInterface
     /**
      * @var integer
      *
-     * @ORM\Column(name="id", type="integer")
+     * @ORM\Column(name="id", type="integer", nullable=true)
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
@@ -35,7 +35,7 @@ class User implements ModelInterface, UserInterface
     /**
      * @var string
      *
-     * @ORM\Column(name="username", type="string", length=255)
+     * @ORM\Column(name="name", type="string", length=100)
      */
     protected $username;
 
@@ -47,11 +47,32 @@ class User implements ModelInterface, UserInterface
     protected $password;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="salt", type="string", length=255)
+     */
+    protected $salt;
+
+    /**
      * @var array
      *
      * @ORM\Column(name="roles", type="array")
      */
     protected $roles;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="email", type="string")
+     */
+    protected $email;
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="time_created", type="integer")
+     */
+    protected $time_created;
 
     /**
      * Get id

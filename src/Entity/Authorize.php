@@ -17,7 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Authorize
  *
- * @ORM\Table(name="authbucket_oauth2_authorize")
+ * @ORM\Table(name="perseids_oauth2_authorize")
  * @ORM\Entity(repositoryClass="Perseids\OAuth2\Entity\AuthorizeRepository")
  */
 class Authorize implements AuthorizeInterface
