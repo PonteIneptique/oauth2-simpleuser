@@ -19,6 +19,7 @@
 namespace Perseids\OAuth2;
 
 use Perseids\OAuth2\Entity\ModelManagerFactory;
+use SimpleUser\UserManager;
 
 use AuthBucket\OAuth2\Controller\AuthorizeController;
 use AuthBucket\OAuth2\Controller\ClientController;
@@ -38,6 +39,8 @@ use Silex\ControllerProviderInterface;
 use Silex\ServiceProviderInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+use Perseids\OAuth2\Entity\UserRepository;
+
 /**
  * OAuth2 service provider as plugin for Silex SecurityServiceProvider.
  *
@@ -45,13 +48,15 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProviderInterface
 {
+    protected $em;
+    protected $userManager;
 
-    public function __construct(Application $app) {
+    public function __construct(Application $app, UserManager $UserManager) {
         $this->em = new OAuth2EntityManager($app);
+        $this->userManager = $UserManager;
     }
 
-    public function register(Application $app)
-    {
+    public function register(Application $app) {
         $app['authbucket_oauth2.model'] = array(
             'access_token' => 'Perseids\\OAuth2\\Entity\\AccessToken',
         );
@@ -61,7 +66,7 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
         // (Optional) For using grant_type = password, override this parameter
         // with your own user provider, e.g. using InMemoryUserProvider or a
         // Doctrine ORM EntityRepository that implements UserProviderInterface.
-        $app['authbucket_oauth2.user_provider'] = null;
+        $app['authbucket_oauth2.user_provider'] = $this->userManager;
 
         // Add default response type handler.
         $app['authbucket_oauth2.response_handler'] = array(
