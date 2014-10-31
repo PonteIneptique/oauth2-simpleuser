@@ -43,8 +43,7 @@ use SimpleUser\UserManager;
 class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProviderInterface
 {
 
-    public function register(Application $app) {
-    }
+    public function register(Application $app) {}
 
     public function connect(Application $app)
     {
