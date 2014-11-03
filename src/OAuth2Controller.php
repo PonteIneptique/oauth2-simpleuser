@@ -70,7 +70,7 @@ class OAuth2Controller {
         // Display the form.
         $authorizationRequest = $request->query->all();
 
-        return $app['twig']->render(__DIR__ . 'views/authorize.twig', array(
+        return $app['twig']->render('@perseidsoauth/authorize.twig', array(
             'client_id' => $clientId,
             'username' => $username,
             'scopes' => $scope,

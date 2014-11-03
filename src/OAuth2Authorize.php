@@ -34,7 +34,7 @@ use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
 class OAuth2Authorize implements ServiceProviderInterface, ControllerProviderInterface
 {
 	public function register(Application $app) {
-		
+
 		$app['security.encoder.digest'] = $app->share(function ($app) {
 			return new PlaintextPasswordEncoder();
 		});
@@ -48,6 +48,11 @@ class OAuth2Authorize implements ServiceProviderInterface, ControllerProviderInt
         return $controllers;
     }
 	public function boot(Application $app) {
-		
+        // Add twig template path.
+        if (isset($app['twig.loader.filesystem'])) {
+            $app['twig.loader.filesystem']->addPath(__DIR__ . '/views/', 'perseidsoauth');
+            exit();
+        }
+
 	}
 }
