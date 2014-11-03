@@ -37,6 +37,13 @@ class OAuth2Authorize implements ServiceProviderInterface, ControllerProviderInt
 		$app['security.encoder.digest'] = $app->share(function ($app) {
 			return new PlaintextPasswordEncoder();
 		});
+		
+        // User controller service.
+        $app['perseids.oauth2.controller'] = $app->share(function ($app) {
+            $controller = new OAuth2Controller();
+
+            return $controller;
+        });
 	}
     public function connect(Application $app)
     {
