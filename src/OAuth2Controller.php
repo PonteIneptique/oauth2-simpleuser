@@ -20,6 +20,7 @@ class OAuth2Controller {
     public function authorizeAction(Request $request, Application $app)
     {
         // We only handle non-authorized scope here.
+        /*
         try {
             return $app['authbucket_oauth2.oauth2_controller']->authorizeAction($request);
         } catch (InvalidScopeException $exception) {
@@ -28,6 +29,7 @@ class OAuth2Controller {
                 throw $exception;
             }
         }
+        */
         // Fetch parameters, which already checked.
         $clientId = $request->query->get('client_id');
         $username = $app['security']->getToken()->getUser()->getUsername();

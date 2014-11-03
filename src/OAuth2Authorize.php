@@ -25,6 +25,7 @@ use Silex\ServiceProviderInterface;
 
 use Perseids\OAuth2\OAuth2Controller;
 
+use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
 /**
  * OAuth2 service provider as plugin for Silex SecurityServiceProvider.
  *
@@ -33,6 +34,10 @@ use Perseids\OAuth2\OAuth2Controller;
 class OAuth2Authorize implements ServiceProviderInterface, ControllerProviderInterface
 {
 	public function register(Application $app) {
+		
+		$app['security.encoder.digest'] = $app->share(function ($app) {
+			return new PlaintextPasswordEncoder();
+		});
 
 	}
     public function connect(Application $app)

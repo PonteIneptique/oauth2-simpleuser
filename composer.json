@@ -32,7 +32,8 @@
         "twig/twig": "~1.8",
         "authbucket/oauth2-php": "~2.3",
         "jasongrimes/silex-simpleuser": "~2.0",
-        "perseids/clients-manager": "~0.1"
+        "perseids/clients-manager": "~0.1",
+        "symfony/form": "~2.3",
     },
     "require-dev" : {
         "silex/silex": "~1.2",
