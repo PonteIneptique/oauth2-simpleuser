@@ -31,12 +31,12 @@
         "doctrine/orm": "~2.2,>=2.2.3",
         "twig/twig": "~1.8",
         "authbucket/oauth2-php": "~2.3",
-        "jasongrimes/silex-simpleuser": "~1.7",
+        "jasongrimes/silex-simpleuser": "~2.0",
         "perseids/clients-manager": "~0.1"
     },
     "require-dev" : {
         "silex/silex": "~1.2",
-        "jasongrimes/silex-simpleuser": "~1.7"
+        "jasongrimes/silex-simpleuser": "~2.0"
     },
     "type": "library"
 }
