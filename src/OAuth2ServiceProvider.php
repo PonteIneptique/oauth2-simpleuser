@@ -43,10 +43,6 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
 {
 
     public function register(Application $app) {
-        $app['authbucket_oauth2.user_provider'] = $app->share(function ($app) {
-            return $app['authbucket_oauth2.model_manager.factory']->getModelManager('user');
-        });
-
         $app['doctrine.orm.entity_manager'] = $app->share(function ($app) {
             $conn = $app['dbs']['default'];
             $em = $app['dbs.event_manager']['default'];
@@ -60,7 +56,6 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
 
         // User controller service.
         $app['perseids.oauth2.controller'] = $app->share(function ($app) {
-            //$app['clients.options.init']();
             $controller = new OAuth2Controller();
 
             return $controller;

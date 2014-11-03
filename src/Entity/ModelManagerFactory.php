@@ -31,7 +31,9 @@ class ModelManagerFactory implements ModelManagerFactoryInterface
         foreach ($models as $type => $model) {
             $manager = $em->getRepository($model);
             if (!$manager instanceof ModelManagerInterface) {
-                throw new ServerErrorException();
+                throw new ServerErrorException($message = array(
+                    "error_description" => "The Manager for " . $model . " is not a ModelManagerInterface"
+                ));
             }
             $managers[$type] = $manager;
         }
@@ -42,7 +44,7 @@ class ModelManagerFactory implements ModelManagerFactoryInterface
     public function getModelManager($type)
     {
         if (!isset($this->managers[$type])) {
-            throw new ServerErrorException();
+            throw new ServerErrorException(array("error_description" => "The manager for " . $type . " is not available"));
         }
 
         return $this->managers[$type];

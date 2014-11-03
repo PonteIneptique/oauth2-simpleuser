@@ -25,7 +25,7 @@ class OAuth2Controller {
         } catch (InvalidScopeException $exception) {
             $message = unserialize($exception->getMessage());
             if ($message['error_description'] !== 'The requested scope is invalid.') {
-                throw $exception. "HELLO";
+                throw $exception;
             }
         }
         // Fetch parameters, which already checked.
