@@ -69,16 +69,18 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
         $controllers->get('/authorize', 'authbucket_oauth2.oauth2_controller:authorizeAction')
             ->bind('api_oauth2_authorize');
 
-        $controllers->post('/token', 'authbucket_oauth2.oauth2_controller:tokenAction')
+        $controllers->match('/token', 'authbucket_oauth2.oauth2_controller:tokenAction')
+            ->method('GET|POST')
             ->bind('api_oauth2_token');
-
+/*
         $controllers->match('/debug', 'authbucket_oauth2.oauth2_controller:debugAction')
             ->bind('api_oauth2_debug')
             ->method('GET|POST');
 
         $controllers->get('/cron', 'authbucket_oauth2.oauth2_controller:cronAction')
             ->bind('api_oauth2_cron');
-
+*/
+        /*
         foreach (array('authorize', 'client', 'scope') as $type) {
             $controllers->post('/rest/'.$type.'.{_format}', 'authbucket_oauth2.'.$type.'_controller:createAction')
                 ->bind('api_'.$type.'_create')
@@ -100,6 +102,7 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
                 ->bind('api_'.$type.'_list')
                 ->assert('_format', 'json|xml');
         }
+        */
 
         return $controllers;
     }
