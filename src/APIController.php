@@ -20,12 +20,14 @@ class APIController {
     public function userDetails(Request $request, Application $app) {
         $token = $app["security"]->getToken();
 
+        $manager = $app["user.manager"];
+        $user = $manager->loadUserByUsername($token->getUsername());
+
         return $app->json(array(
-            "uid" => 1,
-            "username" => "username",
-            "email" => "email",
-            "name" => "name",
-            "token" => $token
+            "uid" => $user->getId(),
+            "username" => $user->getUsername(),
+            "email" => $user->getEmail(),
+            "name" => $user->getName()
         ));
     }
 }
