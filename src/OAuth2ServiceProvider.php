@@ -32,8 +32,7 @@ use Doctrine\ORM\Tools\Setup;
 
 use Perseids\OAuth2\Entity\ModelManagerFactory;
 use Perseids\OAuth2\Entity\UserRepository;
-
-use SimpleUser\UserManager;
+use Perseids\OAuth2\OAuth2Controller;
 
 /**
  * OAuth2 service provider as plugin for Silex SecurityServiceProvider.
@@ -43,7 +42,30 @@ use SimpleUser\UserManager;
 class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProviderInterface
 {
 
-    public function register(Application $app) {}
+    public function register(Application $app) {
+        $app['authbucket_oauth2.user_provider'] = $app->share(function ($app) {
+            return $app['authbucket_oauth2.model_manager.factory']->getModelManager('user');
+        });
+
+        $app['doctrine.orm.entity_manager'] = $app->share(function ($app) {
+            $conn = $app['dbs']['default'];
+            $em = $app['dbs.event_manager']['default'];
+
+            $isDevMode = false;
+            $config = Setup::createAnnotationMetadataConfiguration(array(__DIR__.'/../Entity'), $isDevMode, null, null, false);
+
+            return EntityManager::create($conn, $config, $em);
+        });
+
+
+        // User controller service.
+        $app['perseids.oauth2.controller'] = $app->share(function ($app) {
+            //$app['clients.options.init']();
+            $controller = new OAuth2Controller();
+
+            return $controller;
+        });
+    }
 
     public function connect(Application $app)
     {
@@ -88,35 +110,14 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
     }
 
     public function boot(Application $app) {
-        //$app['dispatcher']->addListener(KernelEvents::EXCEPTION, array($app['perseids_oauth2.exception_listener'], 'onKernelException'), -8);
-        $app['doctrine.orm.entity_manager'] = $app->share(function ($app) {
-            $conn = $app['dbs']['default'];
-            $em = $app['dbs.event_manager']['default'];
+        if(!$app['user.manager']) {
+            throw new \LogicException('There is no user.manager available from within the OAuth2ServiceProvider.');
+        }
+        if (!$app['user.tokenGenerator']) {
+            // using RuntimeException crashes PHP?!
+            throw new \LogicException('You must enable the ServiceController service provider to be able to use these routes.');
+        }
 
-            $isDevMode = false;
-            $config = Setup::createAnnotationMetadataConfiguration(array(__DIR__.'/../Entity'), $isDevMode, null, null, false);
-
-            return EntityManager::create($conn, $config, $em);
-        });
-
-        // Return entity classes for model manager.
-        $app['authbucket_oauth2.model'] = array(
-            'access_token' => 'Perseids\\OAuth2\\Entity\\AccessToken',
-            'authorize' => 'Perseids\\OAuth2\\Entity\\Authorize',
-            'client' => 'Perseids\\ClientsManager\\Entity\\Client',
-            'code' => 'Perseids\\OAuth2\\Entity\\Code',
-            'refresh_token' => 'Perseids\\OAuth2\\Entity\\RefreshToken',
-            'scope' => 'Perseids\\OAuth2\\Entity\\Scope',
-            'user' => 'Perseids\\OAuth2\\Entity\\User',
-        );
-
-        // Add model managers from ORM.
-        $app['authbucket_oauth2.model_manager.factory'] = $app->share(function ($app) {
-            return new ModelManagerFactory(
-                $app['doctrine.orm.entity_manager'],
-                $app['authbucket_oauth2.model']
-            );
-        });
     }
 }
 ?>

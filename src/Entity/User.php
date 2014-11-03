@@ -21,7 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\Table(name="users")
  * @ORM\Entity(repositoryClass="Perseids\OAuth2\Entity\UserRepository")
  */
-class User implements ModelInterface, UserInterface
+class User /*extends SimpleUser_User*/ implements ModelInterface, UserInterface
 {
     /**
      * @var integer
@@ -36,6 +36,13 @@ class User implements ModelInterface, UserInterface
      * @var string
      *
      * @ORM\Column(name="name", type="string", length=100)
+     */
+    protected $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="username", type="string", length=100)
      */
     protected $username;
 
@@ -82,6 +89,19 @@ class User implements ModelInterface, UserInterface
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * Set id
+     *
+     * @param integer $id
+     * 
+     * @return integer
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
     }
 
     /**
@@ -132,35 +152,185 @@ class User implements ModelInterface, UserInterface
         return $this->password;
     }
 
-    /**
-     * Set roles.
+   /**
+     * Returns the roles granted to the user. Note that all users have the ROLE_USER role.
      *
-     * @param array $roles
-     *
-     * @return User
-     */
-    public function setRoles($roles)
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    /**
-     * Get roles.
-     *
-     * @return array
+     * @return array A list of the user's roles.
      */
     public function getRoles()
     {
-        return $this->roles;
+        $roles = $this->roles;
+
+        // Every user must have at least one role, per Silex security docs.
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
+    /**
+     * Set the user's roles to the given list.
+     *
+     * @param array $roles
+     */
+    public function setRoles(array $roles)
+    {
+        $this->roles = array();
+
+        foreach ($roles as $role) {
+            $this->addRole($role);
+        }
+    }
+
+    /**
+     * Test whether the user has the given role.
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return in_array(strtoupper($role), $this->getRoles(), true);
+    }
+
+    /**
+     * Add the given role to the user.
+     *
+     * @param string $role
+     */
+    public function addRole($role)
+    {
+        $role = strtoupper($role);
+
+        if ($role === 'ROLE_USER') {
+            return;
+        }
+
+        if (!$this->hasRole($role)) {
+            $this->roles[] = $role;
+        }
+    }
+
+    /**
+     * Remove the given role from the user.
+     *
+     * @param string $role
+     */
+    public function removeRole($role)
+    {
+        if (false !== $key = array_search(strtoupper($role), $this->roles, true)) {
+            unset($this->roles[$key]);
+            $this->roles = array_values($this->roles);
+        }
+    }
+
+    /**
+     * Set the salt that should be used to encode the password.
+     *
+     * @param string $salt
+     */
+    public function setSalt($salt)
+    {
+        $this->salt = $salt;
+    }
+
+    /**
+     * Returns the salt that was originally used to encode the password.
+     *
+     * This can return null if the password was not encoded using a salt.
+     *
+     * @return string The salt
+     */
     public function getSalt()
     {
+        return $this->salt;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set the time the user was originally created.
+     *
+     * @param int $timeCreated A timestamp value.
+     */
+    public function setTimeCreated($timeCreated)
+    {
+        $this->timeCreated = $timeCreated;
+    }
+
+    /**
+     * Set the time the user was originally created.
+     *
+     * @return int
+     */
+    public function getTimeCreated()
+    {
+        return $this->timeCreated;
+    }
+
+    /**
+     * Checks whether the user is enabled.
+     *
+     * Internally, if this method returns false, the authentication system
+     * will throw a DisabledException and prevent login.
+     *
+     * Users are enabled by default.
+     *
+     * @return bool    true if the user is enabled, false otherwise
+     *
+     * @see DisabledException
+     */
+    public function isEnabled()
+    {
+        /*
+        if ($this->hasCustomField('su:isEnabled') && !$this->getCustomField('su:isEnabled')) {
+            return false;
+        }
+        */
+        return true;
+    }
+
+    /**
+     * @return string The user's email address.
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param string $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
     }
 
     public function eraseCredentials()
     {
     }
+
+    /**
+     * Returns the name, if set, or else "Anonymous {id}".
+     *
+     * @return string
+     */
+    public function getDisplayName()
+    {
+        return $this->name ?: 'User ' . $this->email;
+    }
+
 }
