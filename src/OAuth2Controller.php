@@ -17,8 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class OAuth2Controller {
 
-    public function authorizeAction(Request $request, Application $app)
-    {
+    public function authorizeAction(Request $request, Application $app) {
         // We only handle non-authorized scope here.
         /*
         try {

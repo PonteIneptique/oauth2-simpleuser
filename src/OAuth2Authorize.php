@@ -34,25 +34,22 @@ use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
 class OAuth2Authorize implements ServiceProviderInterface, ControllerProviderInterface
 {
 	public function register(Application $app) {
-
 		$app['security.encoder.digest'] = $app->share(function ($app) {
 			return new PlaintextPasswordEncoder();
 		});
-
 	}
     public function connect(Application $app)
     {
 	    $controllers = $app['controllers_factory'];
-	    $controllers->get('/authorize', 'perseids.oauth2.controller:authorizeAction')
-	        ->bind('user_authorize');
+	    $controllers->match('/authorize', 'perseids.oauth2.controller:authorizeAction')
+            ->method('GET|POST')
+	        ->bind('perseidsoauth.authorize');
         return $controllers;
     }
 	public function boot(Application $app) {
         // Add twig template path.
         if (isset($app['twig.loader.filesystem'])) {
             $app['twig.loader.filesystem']->addPath(__DIR__ . '/views/', 'perseidsoauth');
-            exit();
         }
-
 	}
 }
