@@ -67,7 +67,7 @@ class OAuth2ServiceProvider implements ServiceProviderInterface, ControllerProvi
         $controllers = $app['controllers_factory'];
 
         $controllers->get('/authorize', 'authbucket_oauth2.oauth2_controller:authorizeAction')
-            ->bind('api_oauth2_authorize');
+            ->bind('oauth2_authorize');
 
         $controllers->match('/token', 'authbucket_oauth2.oauth2_controller:tokenAction')
             ->method('GET|POST')
