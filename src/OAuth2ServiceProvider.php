@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace AuthBucket\OAuth2\Provider;
+namespace Perseids\OAuth2;
 
 use AuthBucket\OAuth2\Controller\AuthorizeController;
 use AuthBucket\OAuth2\Controller\ClientController;
