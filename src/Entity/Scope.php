@@ -39,6 +39,13 @@ class Scope implements ScopeInterface
     protected $scope;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="description", type="string", length=255)
+     */
+    protected $description;
+
+    /**
      * Get id
      *
      * @return integer
@@ -70,5 +77,29 @@ class Scope implements ScopeInterface
     public function getScope()
     {
         return $this->scope;
+    }
+
+    /**
+     * Set description
+     *
+     * @param string $description
+     *
+     * @return Description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get description
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 }
