@@ -12,12 +12,6 @@
         }
     },
     "description": "An Implementation of ORM for oAuthBucket oAuth2 implementation using clients issued by perseids/clients-manager and user issued by jasongrimes/silex-simpleuser",
-    "extra": {
-        "branch-alias": {
-            "dev-develop": "0.x-dev",
-            "dev-master": "0.1.x-dev"
-        }
-    },
     "homepage": "https://github.com/ponteineptique/oauth2-clients-manager",
     "keywords": [
         "oauth2"
