@@ -17,22 +17,30 @@
         "oauth2"
     ],
     "license": "MIT",
-    "minimum-stability": "dev",
+
     "name": "perseids/oauth2-orm-bridge",
+
+
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/ponteineptique/oauth2-php.git"
+        }
+    ],
+
     "require": {
         "php": ">=5.3.9",
+        
+        "authbucket/oauth2-php" : "2.3.4",
+
         "silex/silex": "~1.2",
         "doctrine/orm": "~2.2,>=2.2.3",
         "twig/twig": "~1.8",
-        "authbucket/oauth2-php": "~2.3",
         "jasongrimes/silex-simpleuser": "~2.0",
         "perseids/clients-manager": "~0.1",
         "symfony/form": "~2.3",
         "symfony/locale": "~2.3"
     },
-    "require-dev" : {
-        "silex/silex": "~1.2",
-        "jasongrimes/silex-simpleuser": "~2.0"
-    },
+
     "type": "library"
 }
