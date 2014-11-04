@@ -69,12 +69,44 @@ class OAuth2Controller {
         // Display the form.
         $authorizationRequest = $request->query->all();
 
+        /*
+         * Display values
+         *     We get nicer value to show through our modelManageer
+         */
+        $scopes = array();
+        $user = $app["user.manager"]->getCurrentUser()->getName();
+        $client_name = $clientId;
+        $client_description = "";
+
+        if(count($scope) > 0) {
+            $modelManagerFactory = $app['authbucket_oauth2.model_manager.factory'];
+            $scopeManager = $modelManagerFactory->getModelManager("scope");
+
+            foreach($scope as $scopeTitle) {
+                $temp = $scopeManager->readModelOneBy(array(
+                    "scope" => $scopeTitle
+                ));
+                $scopes[] = $temp->getDescription();
+
+            }
+
+
+            $clientManager = $modelManagerFactory->getModelManager("client");
+            $client = $clientManager->readModelOneBy(array(
+                "clientId" => $clientId
+            ));
+            $client_name = $client->getName();
+            $client_description = $client->getDescription();
+        }
+
+
+
         return $app['twig']->render('@perseidsoauth/authorize.twig', array(
-            'client_id' => $clientId,
-            'username' => $username,
-            'scopes' => $scope,
-            'form' => $form->createView(),
-            'authorization_request' => $authorizationRequest,
+            'client_name' => $client_name,
+            'client_description' => $client_description,
+            'username' => $user,
+            'scopes' => $scopes,
+            'form' => $form->createView()
         ));
     }
 }
